@@ -52,11 +52,27 @@ Token Quota 将 Codex 的剩余额度显示为一个手机状态栏风格的悬�
 
 命令行可选项：`--mode week` 以周额度启动，`--interval 10` 设置补充轮询秒数（最小 5 秒）。
 
+### 随 Codex 自动打开（可选）
+
+安装完成后，在项目目录运行一次：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install_autostart.ps1
+```
+
+这会创建当前用户的 Windows 计划任务 `TokenQuota-Codex`。后台检测器在登录时启动，每 2 秒检查一次 Codex 桌面应用；打开 Codex 后自动显示电池，退出 Codex 后关闭由检测器打开的电池。不会把 Codex CLI、额度查询子进程或独立的 ChatGPT 应用当作 Codex 桌面应用。在电池右键菜单选择退出后，该次 Codex 会话中不会反复拉起；下次重新打开 Codex 时再次显示。请保留安装目录。
+
+关闭自动联动：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\uninstall_autostart.ps1
+```
+
 ### 数据来源与隐私
 
 读取官方 [Codex app-server](https://learn.chatgpt.com/docs/app-server) 的 `account/rateLimits/read`，展示 `100 - usedPercent`。按接口实际 `windowDurationMins` 识别 300 分钟和 10080 分钟窗口，不把缺失值当作零。只读取额度，不启动模型对话，不修改账户登录，不上传个人额度或凭据到本仓库。
 
-仅在 `%LOCALAPPDATA%\TokenQuota\position.json` 保存窗口位置。退出时关闭由本工具创建的 app-server 子进程。没有开机自启，不依赖 Pets 插件，也不会自动跟随宠物位置。
+窗口位置保存在 `%LOCALAPPDATA%\TokenQuota\position.json`；启用自动联动后，如检测器发生异常，会在同目录保存 `monitor.log` 错误信息。退出电池时关闭由本工具创建的 app-server 子进程。默认不启用登录自启；上述自动联动需要主动安装。不依赖 Pets 插件，也不会自动跟随宠物位置。
 
 ### 开发与验证
 
@@ -116,11 +132,27 @@ The app finds the CLI through PATH or `%LOCALAPPDATA%\OpenAI\Codex\bin`. To spec
 
 Optional arguments: `--mode week` starts with the weekly quota; `--interval 10` sets the fallback polling interval in seconds, with a minimum of 5 seconds.
 
+### Open automatically with Codex (optional)
+
+After installation, run this once from the project directory:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install_autostart.ps1
+```
+
+This creates the current user's Windows scheduled task, `TokenQuota-Codex`. A background monitor starts at sign-in and checks for the Codex desktop app every 2 seconds. It opens the battery when Codex starts and closes the battery it opened when Codex exits. It excludes the Codex CLI, quota-reader subprocesses, and the separate ChatGPT app. If you quit the battery from its context menu, it stays closed for that Codex session and returns the next time Codex starts. Keep the installation directory in place.
+
+To disable this behavior:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\uninstall_autostart.ps1
+```
+
 ### Data source and privacy
 
 The app calls `account/rateLimits/read` through the official [Codex app-server](https://learn.chatgpt.com/docs/app-server) and displays `100 - usedPercent`. It identifies the 300-minute and 10,080-minute windows from the actual `windowDurationMins` values. Missing data is never treated as zero. It only reads quota metadata: it does not start model conversations, change your account login, or upload your personal quota or credentials to this repository.
 
-Only the window position is saved, in `%LOCALAPPDATA%\TokenQuota\position.json`. On exit, the app closes the app-server process it created. It does not enable startup at login, require the Pets plugin, or automatically follow a pet's position.
+The window position is saved in `%LOCALAPPDATA%\TokenQuota\position.json`. If the optional monitor encounters an error, it writes `monitor.log` in the same directory. On exit, the battery closes the app-server process it created. Startup at sign-in is disabled by default and requires installing the optional integration above. The app does not require the Pets plugin or automatically follow a pet's position.
 
 ### Development and testing
 
